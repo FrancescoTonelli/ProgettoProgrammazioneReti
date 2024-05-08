@@ -1,7 +1,6 @@
 import socket
 import threading
 
-
 def client_receive(client_socket):
     """
     Receives messages from the server and prints them to the client's console.
