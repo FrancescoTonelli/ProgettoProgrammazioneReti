@@ -1,6 +1,7 @@
 import socket
 import threading
 import tkinter as tk
+import datetime
 
 def client_closing_window():
     """
@@ -25,9 +26,6 @@ def client_generate_window(client_socket):
     message_frame = tk.Frame(window)
     message_frame.pack()
     
-    new_message = tk.StringVar()
-    new_message.set("Insert message here")
-    
     scrollbar = tk.Scrollbar(message_frame)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
     
@@ -37,7 +35,10 @@ def client_generate_window(client_socket):
     
     scrollbar.config(command=message_list.yview)
     
-    entry_field = tk.Entry(window, textvariable=new_message)
+    instruction_label = tk.Label(window, text="Insert your message here and press enter", font=("Arial", 10), fg="gray")
+    instruction_label.pack()
+    
+    entry_field = tk.Entry(window)
     entry_field.pack(fill=tk.BOTH, padx=10, pady=10)
     entry_field.bind("<Return>", lambda event: client_send())
     window.entry_field = entry_field
@@ -64,6 +65,7 @@ def client_send():
     """
     try:
         message = window.entry_field.get()
+        message += f" [ {datetime.datetime.now().strftime("%H:%M")} ]"
         if message:
             window.message_list.insert(tk.END, f"You: {message}")
             window.entry_field.delete(0, tk.END)
