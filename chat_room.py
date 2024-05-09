@@ -65,7 +65,7 @@ def client_send():
     """
     try:
         message = window.entry_field.get()
-        message += f" [ {datetime.datetime.now().strftime("%H:%M")} ]"
+        message += " [ " + datetime.datetime.now().strftime("%H:%M") + " ]"
         if message:
             window.message_list.insert(tk.END, f"You: {message}")
             window.entry_field.delete(0, tk.END)
