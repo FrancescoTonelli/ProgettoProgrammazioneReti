@@ -1,54 +1,94 @@
 import socket
 import threading
+import tkinter as tk
 
-def client_receive(client_socket):
+def client_closing_window():
     """
-    Receives messages from the server and prints them to the client's console.
-
-    Args:
-        client_socket (socket.socket): The client's socket connection.
-
-    Returns:
-        None
+    Closes the client application window and restarts the client mode.
     """
-    while True:
-        try:
-            print(client_socket.recv(BUFFER_SIZE).decode())
-        except:
-            break
+    window.client_socket.close()
+    window.destroy()
+    print("---Window closed---")
+    client_mode()
             
-
-def client_send(client_socket):
+def client_generate_window(client_socket):
     """
-    Sends messages from the client to the server.
+    Generates and displays the client application window.
 
     Args:
-        client_socket (socket.socket): The client's socket connection.
+        client_socket: The client socket used for communication with the server.
+    """
+    global window
+    window = tk.Tk()
+    window.title("Chat_Lab")
+    
+    message_frame = tk.Frame(window)
+    message_frame.pack()
+    
+    new_message = tk.StringVar()
+    new_message.set("Insert message here")
+    
+    scrollbar = tk.Scrollbar(message_frame)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    
+    message_list = tk.Listbox(message_frame, height=15, width=50, font=("Arial", 12), yscrollcommand=scrollbar.set)
+    message_list.pack(side=tk.LEFT, fill=tk.BOTH)
+    window.message_list = message_list
+    
+    scrollbar.config(command=message_list.yview)
+    
+    entry_field = tk.Entry(window, textvariable=new_message)
+    entry_field.pack(fill=tk.BOTH, padx=10, pady=10)
+    entry_field.bind("<Return>", lambda event: client_send())
+    window.entry_field = entry_field
+    
+    window.client_socket = client_socket
+    
+    window.protocol("WM_DELETE_WINDOW", client_closing_window)
 
-    Returns:
-        None
+def client_receive():
+    """
+    Receives messages from the client socket and displays them in the application window.
     """
     while True:
         try:
-            message = input()
-            client_socket.send(message.encode())
+            message = window.client_socket.recv(BUFFER_SIZE).decode()
+            window.message_list.insert(tk.END, message)
+            window.message_list.yview(tk.END)
         except:
             break
+
+def client_send():
+    """
+    Sends a message to the server using the client socket and displays it in the application window.
+    """
+    try:
+        message = window.entry_field.get()
+        if message:
+            window.message_list.insert(tk.END, f"You: {message}")
+            window.entry_field.delete(0, tk.END)
+            window.message_list.yview(tk.END)
+            window.client_socket.send(message.encode())
+    except:
+        print("---Server disconnected---")
+        client_closing_window()
+        return
+
 
 def client_mode():
     """
-    Manages the client-side functionality, like connecting to the server,
-    sending and receiving messages, and handling exceptions.
-
-    Args:
-        None
-
-    Returns:
-        None
+    Manages the client-side functionality, including connecting to the server, handling username input, 
+    and initialing send/receive functions and window 
     """
     try:
-        host = input("Insert host server's IP: ")
-        port = input("Insert host server's port: ")
+        this_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        host = ""
+        port = ""
+        try:
+            host = input("Insert host server's IP: ")
+            port = input("Insert host server's port: ")
+        except: 
+            pass
         
         if not host:
             host = HOST
@@ -59,15 +99,28 @@ def client_mode():
             port = int(port)
         
         this_socket.connect((host, port))
-        send_thread = threading.Thread(target=client_send, args=(this_socket,))
-        send_thread.start()
-        client_receive(this_socket)
-        send_thread.join()
-        print("---Server disconnected---")
+        
+        name = ""
+        while not name:
+            try:
+                name = input("Insert your username: ")
+                this_socket.send(name.encode())
+            except: 
+                pass
+        
+        client_generate_window(this_socket)
+        
+        thread_receive = threading.Thread(target=client_receive)
+        thread_receive.start()
+        
+        window.mainloop()  
+        
         this_socket.close()
         client_mode()
     except Exception as e:
         print(e)
+        window.destroy()
+        client_mode()
 
 def server_broadcast(message, sender=None):
     """
@@ -76,9 +129,6 @@ def server_broadcast(message, sender=None):
     Args:
         message (str): The message to be broadcasted.
         sender (socket.socket, optional): The socket of the sender. Defaults to None.
-
-    Returns:
-        None
     """
     if sender is None:
         print(message)
@@ -99,9 +149,6 @@ def server_user_manager(user):
 
     Args:
         user (socket.socket): The socket connection of the user.
-
-    Returns:
-        None
     """
     try:
         username = user.recv(BUFFER_SIZE).decode()
@@ -114,25 +161,21 @@ def server_user_manager(user):
     while True:
         try:
             server_broadcast(user.recv(BUFFER_SIZE).decode(), user)
+        except KeyboardInterrupt:
+            break
         except:
             break
-    
     del users[user]
     server_broadcast(f"---{username} left the chat---")
     user.close()
-    
+     
 
 def server_mode():
     """
     Manages the server-side functionality, including binding to a host and port,
     listening for incoming connections, and handling user connections with threads.
-
-    Args:
-        None
-
-    Returns:
-        None
     """
+    this_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     global users
     users = {}
     try:
@@ -144,18 +187,11 @@ def server_mode():
     this_socket.listen()
     while True:
         user, user_address = this_socket.accept()
-        user.send(("Insert your username").encode())
         threading.Thread(target=server_user_manager, args=(user,)).start()
 
 def mode_selector():
     """
     Allows the user to select whether to run the program as a server (0) or client (1).
-
-    Args:
-        None
-
-    Returns:
-        None
     """
     mode = -1
     while mode not in ["0", "1"]:
@@ -168,12 +204,11 @@ def mode_selector():
     else:
         client_mode()
 
-# Configuration
+# Configuration settings
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 53000
 BUFFER_SIZE = 1024
 
 if __name__ == "__main__":
-    this_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     mode_selector()
 
