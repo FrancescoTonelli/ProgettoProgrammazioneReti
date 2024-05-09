@@ -100,7 +100,11 @@ def client_mode():
         else:
             port = int(port)
         
-        this_socket.connect((host, port))
+        try:
+            this_socket.connect((host, port))
+        except:
+            print("---Connection error---")
+            client_mode()
         
         name = ""
         while not name:
