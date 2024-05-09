@@ -1,15 +1,15 @@
 # Documentazione del Progetto chat_room.py [Traccia 1]
 
 ## Introduzione
-`chat_room.py` è un'applicazione client-server che consente agli utenti (appartenenti ad una stessa rete) di comunicare in una chat comune. Il programma è stato sviluppato in Python facendo uso delle librerie `socket` (per le connessioni e lo scambio di messaggi), `threading` (per rendere simultanei invio e recezione dei messaggi, e per gestire utenti multipli) e `tkinter` (per la finestra grafica del lato client). 
+**`chat_room.py`** è un'applicazione client-server che consente agli utenti (appartenenti ad una stessa rete) di comunicare in una chat comune. Il programma è stato sviluppato in Python facendo uso delle librerie `socket` (per le connessioni e lo scambio di messaggi), `threading` (per rendere simultanei invio e recezione dei messaggi, e per gestire utenti multipli) e `tkinter` (per la finestra grafica del lato client). 
 
 ## Funzionalità Principali
-**Server-Side:**
+**Server:**
    - Gestisce la connessione dei client.
    - Trasmette i messaggi inviati dai client agli altri utenti connessi, in modalità broadcast (escluso l'eventuale mittente).
    - Gestisce le attività degli utenti, come l'ingresso e l'uscita dalla chat.
 
-**Client-Side:**
+**Client:**
    - Connette il client al server.
    - Visualizza la chat in una finestra grafica.
    - Invia e riceve messaggi dalla chat.
@@ -31,7 +31,11 @@
 - **`mode_selector()`:** Consente all'utente di selezionare la modalità (server o client) in cui eseguire l'applicazione.
 
 ## Esecuzione del Codice
-1. Avviare il programma con `python chat_room.py` (o, su Windows, avviando lo script `start.bat`).
+1. Avviare il programma con 
+    ```
+    python chat_room.py
+    ``` 
+    (o, su Windows, avviando lo script `start.bat`).
 2. Selezionare la modalità in cui si vuole eseguire l'applicativo: `0` per la modalità server, `1` per la modalità client.
 3. **Modalità Server**
     1. Il programma creerà la socket per il server all'indirizzo IP della macchina sulla quale è eseguito, e sulla porta 53000, e stamperà queste informazioni su console.
@@ -45,9 +49,13 @@
     5. Per uscire dalla chatroom, basta chiudere la finestra di chat. Il server avviserà tutti gli utenti rimasti che un certo utente ha lasciato la chat. A questo punto, il client uscito dal server riaccede su console alle impostazioni di connessione, per potersi riconnettere allo stesso server, o ad un altro.
 
 
-## Dipendenze
+## Requisiti
 - **Python 3.x**
 - **Librerie Python:** socket, threading, tkinter
+- **Connessione ad una rete** che non blocchi i pacchetti
+
+## Considerazioni aggiuntive
+Ho scelto di sviluppare entrambi i lati del software in un unico file per permettere a diversi utenti, scaricando un solo .py, di hostare la propria chatroom sulla propria macchina, oltre a poter diventare client di molteplici server diversi.
 
 ## Autore
 Francesco Tonelli, matricola 0001071531
